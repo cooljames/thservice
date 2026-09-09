@@ -153,10 +153,10 @@ window.ThApp = (function () {
     const quickUserBtn = document.getElementById('btn-quick-login-user');
     if (quickRootBtn) {
       quickRootBtn.addEventListener('click', async () => {
-        document.getElementById('login-email').value = 'admin@example.com';
+        document.getElementById('login-email').value = 'root@example.com';
         document.getElementById('login-password').value = '1234';
         try {
-          const res = await window.ThAuth.login('admin@example.com', '1234');
+          const res = await window.ThAuth.login('root@example.com', '1234');
           showToast(`최고 관리자 (Root) 계정으로 로그인되었습니다.`, 'success');
           window.ThAuth.closeAuthModal();
           if (window.ThCalendar) window.ThCalendar.refresh();

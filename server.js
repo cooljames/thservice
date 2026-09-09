@@ -52,6 +52,22 @@ function normalizeUser(user) {
   };
 }
 
+// JWT 토큰 생성 헬퍼 (권한 정보 및 프로필 포함하여 Vercel 서버리스 환경 안정성 극대화)
+function generateUserToken(user) {
+  const normalized = normalizeUser(user);
+  return jwt.sign({
+    userId: normalized.id,
+    email: normalized.email,
+    role: normalized.role,
+    name: normalized.name,
+    memberName: normalized.memberName,
+    team: normalized.team,
+    picture: normalized.picture,
+    isAdmin: normalized.isAdmin,
+    isRoot: normalized.isRoot
+  }, JWT_SECRET, { expiresIn: '7d' });
+}
+
 function setAuthCookie(res, token) {
   const isHttps = process.env.NODE_ENV === 'production' || !!process.env.VERCEL;
   res.cookie('auth_token', token, {
@@ -71,7 +87,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // 인증 검사 미들웨어
 const authMiddleware = async (req, res, next) => {
-  let token = req.cookies.auth_token;
+  let token = (req.cookies && req.cookies.auth_token) ? req.cookies.auth_token : undefined;
   if (!token && req.headers.authorization) {
     const parts = req.headers.authorization.split(' ');
     if (parts.length === 2 && parts[0] === 'Bearer') {
@@ -86,7 +102,22 @@ const authMiddleware = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await db.findUserById(decoded.userId);
+    let user = await db.findUserById(decoded.userId);
+    if (!user && decoded.email) {
+      user = await db.findUserByEmail(decoded.email);
+    }
+    // Vercel 서버리스 환경 콜드스타트 / 로컬JSON 초기화 등 DB 조회 일시 실패 시 암호학적으로 검증된 JWT 페이로드로 fallback 복원
+    if (!user && decoded.userId && decoded.role) {
+      user = {
+        id: decoded.userId,
+        email: decoded.email,
+        name: decoded.name,
+        role: decoded.role,
+        memberName: decoded.memberName || decoded.name,
+        team: decoded.team,
+        picture: decoded.picture
+      };
+    }
     req.user = user ? normalizeUser(user) : null;
   } catch (e) {
     req.user = null;
@@ -105,14 +136,20 @@ const requireAuth = (req, res, next) => {
 };
 
 const requireAdmin = (req, res, next) => {
-  if (!req.user || !req.user.isAdmin) {
+  if (!req.user) {
+    return res.status(401).json({ error: '로그인이 필요합니다. 다시 로그인해주세요.' });
+  }
+  if (!req.user.isAdmin) {
     return res.status(403).json({ error: '관리자(Admin) 이상의 권한이 필요합니다.' });
   }
   next();
 };
 
 const requireRoot = (req, res, next) => {
-  if (!req.user || !req.user.isRoot) {
+  if (!req.user) {
+    return res.status(401).json({ error: '로그인이 필요합니다. 다시 로그인해주세요.' });
+  }
+  if (!req.user.isRoot) {
     return res.status(403).json({ error: '최고 관리자(Root) 권한이 필요합니다.' });
   }
   next();
@@ -178,13 +215,14 @@ app.post('/api/auth/register', async (req, res) => {
       team: member.team // 실명에 등록된 조(1조/2조)로 자동 배정
     });
 
-    const token = jwt.sign({ userId: newUser.id, email: newUser.email }, JWT_SECRET, { expiresIn: '7d' });
+    const token = generateUserToken(newUser);
     setAuthCookie(res, token);
 
     res.json({
       success: true,
       message: `${cleanName}님(${member.team})의 회원가입이 완료되었습니다.`,
-      user: normalizeUser(newUser)
+      user: normalizeUser(newUser),
+      token
     });
   } catch (err) {
     console.error('Register error:', err);
@@ -223,13 +261,14 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ error: '등록되지 않은 이메일이거나 비밀번호가 틀립니다.' });
     }
 
-    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    const token = generateUserToken(user);
     setAuthCookie(res, token);
 
     res.json({
       success: true,
       message: '로그인에 성공했습니다.',
-      user: normalizeUser(user)
+      user: normalizeUser(user),
+      token
     });
   } catch (err) {
     console.error('Login error:', err);
@@ -311,11 +350,12 @@ app.get('/api/auth/kakao/callback', async (req, res) => {
       existingUser = await db.findUserByEmail(email);
     }
 
+    const isRootKakao = email.toLowerCase() === adminEmail || nickname === 'James' || email.includes('4905788540');
+
     if (!existingUser) {
-      const isRoot = email.toLowerCase() === adminEmail;
       // 닉네임과 실명 매칭 확인
       const matchedMember = await db.findMemberByName(nickname);
-      const role = isRoot ? 'root' : (matchedMember && matchedMember.isLeader ? 'admin' : 'user');
+      const role = isRootKakao ? 'root' : (matchedMember && matchedMember.isLeader ? 'admin' : 'user');
       const team = matchedMember ? matchedMember.team : '1조';
 
       existingUser = await db.createUser({
@@ -326,12 +366,16 @@ app.get('/api/auth/kakao/callback', async (req, res) => {
         password: null,
         role,
         provider: 'kakao',
-        memberName: nickname,
+        memberName: matchedMember ? matchedMember.name : nickname,
         team
       });
+    } else if (isRootKakao && existingUser.role !== 'root') {
+      // James 또는 관리자 카카오 계정이 user인 경우 root로 즉시 승격
+      await db.updateUserRole(existingUser.id, 'root');
+      existingUser.role = 'root';
     }
 
-    const token = jwt.sign({ userId: existingUser.id, email: existingUser.email }, JWT_SECRET, { expiresIn: '7d' });
+    const token = generateUserToken(existingUser);
     setAuthCookie(res, token);
 
     res.send(`
@@ -344,7 +388,7 @@ app.get('/api/auth/kakao/callback', async (req, res) => {
           <script>
             try {
               if (window.opener) {
-                window.opener.postMessage({ type: 'KAKAO_LOGIN_SUCCESS', user: ${JSON.stringify(normalizeUser(existingUser))} }, '*');
+                window.opener.postMessage({ type: 'KAKAO_LOGIN_SUCCESS', user: ${JSON.stringify(normalizeUser(existingUser))}, token: '${token}' }, '*');
                 window.close();
               } else {
                 window.location.href = '/';

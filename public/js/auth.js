@@ -9,12 +9,36 @@ window.ThAuth = (function () {
   let cachedMembers = [];
   const callbacks = [];
 
-  // API 호출 헬퍼
+  const TOKEN_STORAGE_KEY = 'thservice_auth_token';
+
+  function getToken() {
+    try {
+      return localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function setToken(token) {
+    try {
+      if (token) {
+        localStorage.setItem(TOKEN_STORAGE_KEY, token);
+      } else {
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
+      }
+    } catch (e) {}
+  }
+
+  // API 호출 헬퍼 (쿠키 및 Authorization 헤더 동시 전송으로 Vercel 서버리스 호환성 보장)
   async function apiRequest(url, options = {}) {
     options.headers = {
       'Content-Type': 'application/json',
       ...(options.headers || {})
     };
+    const token = getToken();
+    if (token) {
+      options.headers['Authorization'] = `Bearer ${token}`;
+    }
     options.credentials = 'include';
     const res = await fetch(url, options);
     const data = await res.json().catch(() => ({}));
@@ -72,6 +96,9 @@ window.ThAuth = (function () {
     try {
       const data = await apiRequest('/api/me', { method: 'GET' });
       currentUser = data.authenticated ? data.user : null;
+      if (!currentUser) {
+        setToken(null);
+      }
     } catch (e) {
       currentUser = null;
     }
@@ -85,6 +112,9 @@ window.ThAuth = (function () {
       method: 'POST',
       body: JSON.stringify({ email, password })
     });
+    if (data.token) {
+      setToken(data.token);
+    }
     currentUser = data.user;
     notifySubscribers();
     return data;
@@ -96,6 +126,9 @@ window.ThAuth = (function () {
       method: 'POST',
       body: JSON.stringify(userData)
     });
+    if (data.token) {
+      setToken(data.token);
+    }
     currentUser = data.user;
     notifySubscribers();
     return data;
@@ -103,7 +136,10 @@ window.ThAuth = (function () {
 
   // 로그아웃
   async function logout() {
-    await apiRequest('/api/auth/logout', { method: 'POST' });
+    try {
+      await apiRequest('/api/auth/logout', { method: 'POST' });
+    } catch (e) {}
+    setToken(null);
     currentUser = null;
     notifySubscribers();
   }
@@ -127,6 +163,9 @@ window.ThAuth = (function () {
   // 팝업으로부터의 메시지 수신 (로그인 완료 이벤트)
   window.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'KAKAO_LOGIN_SUCCESS') {
+      if (event.data.token) {
+        setToken(event.data.token);
+      }
       currentUser = event.data.user;
       notifySubscribers();
       if (window.ThApp && window.ThApp.showToast) {
@@ -194,6 +233,9 @@ window.ThAuth = (function () {
     setAuthModalMode,
     loadRegisteredMembers,
     handleNameInputChange,
-    getRegisteredMembers: () => cachedMembers
+    getRegisteredMembers: () => cachedMembers,
+    apiRequest,
+    getToken,
+    setToken
   };
 })();

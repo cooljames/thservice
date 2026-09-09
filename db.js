@@ -100,8 +100,51 @@ function writeJson(filename, data) {
 // 3. PostgreSQL 테이블 초기화 및 시드 데이터 동기화
 // ============================================================
 async function initDb() {
+  const defaultSeedUsers = [
+    {
+      id: "cfcf27dd-35af-4d4e-992e-4c8b8795a025",
+      email: "root@example.com",
+      name: "홍윤표",
+      picture: null,
+      password: "$2a$10$w9FpG1Yy9gq3h0XvVdNuCeE5i7VJn1bUf9DkO8iL8Z2rC6iJ2QfWq",
+      role: "root",
+      provider: "email",
+      memberName: "홍윤표",
+      team: "1조",
+      created_at: "2026-09-09T02:35:28.169Z"
+    },
+    {
+      id: "11111111-1111-1111-1111-111111111111",
+      email: "admin@example.com",
+      name: "원무관리자 (서옥영)",
+      picture: null,
+      password: "$2a$10$w9FpG1Yy9gq3h0XvVdNuCeE5i7VJn1bUf9DkO8iL8Z2rC6iJ2QfWq",
+      role: "admin",
+      provider: "email",
+      memberName: "서옥영",
+      team: "1조",
+      created_at: "2026-01-01T00:00:00.000Z"
+    },
+    {
+      id: "d542522d-577d-adfe-47a7-26710454ac09",
+      email: "kakao_4905788540@kakao.com",
+      name: "James",
+      picture: null,
+      password: null,
+      role: "root",
+      provider: "kakao",
+      memberName: "James",
+      team: "1조",
+      created_at: "2026-09-09T07:06:11.462Z"
+    }
+  ];
+
   if (!pool) {
-    ensureJsonFile('users.json');
+    ensureJsonFile('users.json', defaultSeedUsers);
+    const existingUsers = readJson('users.json', []);
+    if (!existingUsers || existingUsers.length === 0) {
+      writeJson('users.json', defaultSeedUsers);
+    }
     ensureJsonFile('members.json');
     ensureJsonFile('events.json');
     ensureJsonFile('attendance.json');

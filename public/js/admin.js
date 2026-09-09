@@ -25,8 +25,7 @@ window.ThAdmin = (function () {
     if (!tbody) return;
 
     try {
-      const res = await fetch('/api/admin/users');
-      const data = await res.json();
+      const data = await window.ThAuth.apiRequest('/api/admin/users', { method: 'GET' });
       if (!data.success) throw new Error(data.error);
 
       userList = data.users;
@@ -117,13 +116,10 @@ window.ThAdmin = (function () {
   // 역할 변경 API 호출
   async function changeRole(userId, newRole) {
     try {
-      const res = await fetch(`/api/admin/users/${userId}/role`, {
+      const data = await window.ThAuth.apiRequest(`/api/admin/users/${userId}/role`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: newRole })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
 
       if (window.ThApp) window.ThApp.showToast(data.message, 'success');
       await loadUsers();
@@ -136,11 +132,9 @@ window.ThAdmin = (function () {
   // 사용자 삭제 API 호출
   async function deleteUser(userId) {
     try {
-      const res = await fetch(`/api/admin/users/${userId}`, {
+      const data = await window.ThAuth.apiRequest(`/api/admin/users/${userId}`, {
         method: 'DELETE'
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
 
       if (window.ThApp) window.ThApp.showToast(data.message, 'info');
       await loadUsers();
@@ -156,7 +150,7 @@ window.ThAdmin = (function () {
     if (quickLoginBtn) {
       quickLoginBtn.addEventListener('click', async () => {
         try {
-          await window.ThAuth.login('admin@example.com', '1234');
+          await window.ThAuth.login('root@example.com', '1234');
           if (window.ThApp) window.ThApp.showToast('최고 관리자(Root)로 즉시 로그인되었습니다.', 'success');
           loadUsers();
         } catch (e) {

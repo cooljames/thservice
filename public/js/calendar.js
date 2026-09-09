@@ -29,6 +29,28 @@ window.ThCalendar = (function () {
     '2026-12-25': { name: '성탄절', isRed: true }
   };
 
+  // 인증 포함 API 호출 래퍼 (쿠키 + Bearer 토큰 자동 전송)
+  async function api(url, options = {}) {
+    if (window.ThAuth && window.ThAuth.apiRequest) {
+      return await window.ThAuth.apiRequest(url, options);
+    }
+    options.credentials = 'include';
+    options.headers = {
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    };
+    try {
+      const token = localStorage.getItem('thservice_auth_token');
+      if (token) options.headers['Authorization'] = `Bearer ${token}`;
+    } catch (e) {}
+    const res = await fetch(url, options);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error || '요청 처리 중 오류가 발생했습니다.');
+    }
+    return data;
+  }
+
   // 초기화
   async function init() {
     bindEvents();
@@ -41,8 +63,7 @@ window.ThCalendar = (function () {
   // 이벤트 목록 서버에서 가져오기
   async function loadEvents() {
     try {
-      const res = await fetch('/api/events');
-      const data = await res.json();
+      const data = await api('/api/events');
       if (data.success) {
         eventsData = data.events;
       }
@@ -231,9 +252,8 @@ window.ThCalendar = (function () {
         const syncGoogleSheet = document.getElementById('event-input-gsheet').checked;
 
         try {
-          const res = await fetch('/api/events', {
+          const data = await api('/api/events', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               date,
               title,
@@ -243,9 +263,6 @@ window.ThCalendar = (function () {
               syncGoogleSheet
             })
           });
-
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error);
 
           let toastMsg = data.message;
           if (data.googleSheet && data.googleSheet.message) {
@@ -294,9 +311,8 @@ window.ThCalendar = (function () {
         const syncGoogleSheet = document.getElementById('event-edit-gsheet').checked;
 
         try {
-          const res = await fetch(`/api/events/${eventId}`, {
+          const data = await api(`/api/events/${eventId}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               date,
               title,
@@ -493,8 +509,7 @@ window.ThCalendar = (function () {
   // 상세 드로어 열기
   async function openEventDetail(eventId) {
     try {
-      const res = await fetch(`/api/events/${eventId}`);
-      const data = await res.json();
+      const data = await api(`/api/events/${eventId}`);
       if (!data.success) throw new Error(data.error);
 
       currentSelectedEvent = data;
@@ -606,17 +621,13 @@ window.ThCalendar = (function () {
 
     try {
       const eventId = currentSelectedEvent.event.id;
-      const res = await fetch(`/api/events/${eventId}/apply`, {
+      const data = await api(`/api/events/${eventId}/apply`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           memberName: currentUser.memberName || currentUser.name,
           team: currentUser.team || '1조'
         })
       });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
 
       if (window.ThApp) window.ThApp.showToast(data.message, data.applied ? 'success' : 'info');
 
@@ -637,9 +648,7 @@ window.ThCalendar = (function () {
     }
 
     try {
-      const res = await fetch(`/api/events/${eventId}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      const data = await api(`/api/events/${eventId}`, { method: 'DELETE' });
 
       if (window.ThApp) window.ThApp.showToast(data.message, 'info');
       closeDrawer();

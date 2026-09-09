@@ -16,8 +16,7 @@ window.ThDashboard = (function () {
   // 대시보드 통계 데이터 가져오기
   async function loadStats() {
     try {
-      const res = await fetch('/api/dashboard');
-      const data = await res.json();
+      const data = await window.ThAuth.apiRequest('/api/dashboard', { method: 'GET' });
       if (data.success) {
         currentStats = data.stats;
         renderKpi(data.stats);
@@ -125,8 +124,7 @@ window.ThDashboard = (function () {
   // 조편성 명단 로드
   async function loadMembersRoster() {
     try {
-      const res = await fetch('/api/members');
-      const data = await res.json();
+      const data = await window.ThAuth.apiRequest('/api/members', { method: 'GET' });
       if (!data.success) return;
 
       renderTeamRoster('team1-members-grid', data.team1.members, '1조');
@@ -171,35 +169,41 @@ window.ThDashboard = (function () {
     });
   }
 
+  // 드래그 앤 드롭 조 편성 변경
   function setupDragAndDrop() {
-    ['team1-members-grid', 'team2-members-grid'].forEach(containerId => {
-      const el = document.getElementById(containerId);
-      if (!el) return;
+    const dropZones = [
+      document.getElementById('team1-members-grid'),
+      document.getElementById('team2-members-grid')
+    ];
 
-      el.addEventListener('dragover', (e) => {
-        e.preventDefault(); // allow drop
-        el.style.backgroundColor = 'var(--bg-sub)';
-      });
+    dropZones.forEach(zone => {
+      if (!zone) return;
 
-      el.addEventListener('dragleave', (e) => {
-        el.style.backgroundColor = '';
-      });
-
-      el.addEventListener('drop', async (e) => {
+      zone.addEventListener('dragover', (e) => {
         e.preventDefault();
-        el.style.backgroundColor = '';
+        const el = zone.closest('.team-roster-column');
+        if (el) el.style.backgroundColor = 'var(--surface-hover)';
+      });
+
+      zone.addEventListener('dragleave', (e) => {
+        const el = zone.closest('.team-roster-column');
+        if (el) el.style.backgroundColor = '';
+      });
+
+      zone.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        const el = zone.closest('.team-roster-column');
+        if (el) el.style.backgroundColor = '';
         
         const memberId = e.dataTransfer.getData('text/plain');
         if (!memberId) return;
 
         const newTeam = el.dataset.team;
         try {
-          const res = await fetch(`/api/members/${memberId}/team`, {
+          const data = await window.ThAuth.apiRequest(`/api/members/${memberId}/team`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ team: newTeam })
           });
-          const data = await res.json();
           if (data.success) {
             loadMembersRoster();
             loadStats();
@@ -208,7 +212,7 @@ window.ThDashboard = (function () {
           }
         } catch (err) {
           console.error(err);
-          alert('네트워크 오류가 발생했습니다.');
+          alert('조 변경 처리 실패: ' + err.message);
         }
       });
     });
