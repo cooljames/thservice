@@ -1,0 +1,242 @@
+[
+  {
+    "id": 1,
+    "name": "서옥영",
+    "team": "1조",
+    "isLeader": true,
+    "phone": "010-XXXX-0001",
+    "note": "1조(A조) 조장"
+  },
+  {
+    "id": 2,
+    "name": "변승원",
+    "team": "2조",
+    "isLeader": true,
+    "phone": "010-XXXX-0002",
+    "note": "2조(B조) 조장"
+  },
+  {
+    "id": 3,
+    "name": "강문기",
+    "team": "2조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 4,
+    "name": "고금정",
+    "team": "1조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 5,
+    "name": "권간중",
+    "team": "1조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 6,
+    "name": "권혜경",
+    "team": "2조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 7,
+    "name": "김도애",
+    "team": "2조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 8,
+    "name": "김소영",
+    "team": "2조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 9,
+    "name": "김진",
+    "team": "1조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 10,
+    "name": "김희경",
+    "team": "1조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 11,
+    "name": "박성은",
+    "team": "2조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 12,
+    "name": "박재정",
+    "team": "1조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 13,
+    "name": "박재현",
+    "team": "1조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 14,
+    "name": "배정한",
+    "team": "1조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 15,
+    "name": "백나래",
+    "team": "2조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 16,
+    "name": "성주현",
+    "team": "1조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 17,
+    "name": "신용식",
+    "team": "2조",
+    "isLeader": false,
+    "note": "최다 참가자 (11회)"
+  },
+  {
+    "id": 18,
+    "name": "신유경",
+    "team": "2조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 19,
+    "name": "온경하",
+    "team": "2조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 20,
+    "name": "윤경미",
+    "team": "2조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 21,
+    "name": "윤유진",
+    "team": "1조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 22,
+    "name": "윤주은",
+    "team": "2조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 23,
+    "name": "이상미",
+    "team": "2조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 24,
+    "name": "이승미",
+    "team": "2조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 25,
+    "name": "이소현",
+    "team": "2조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 26,
+    "name": "정아름",
+    "team": "1조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 27,
+    "name": "제덕문",
+    "team": "2조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 28,
+    "name": "조성희",
+    "team": "1조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 29,
+    "name": "조은영",
+    "team": "2조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 30,
+    "name": "차미옥",
+    "team": "1조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 31,
+    "name": "차혜린",
+    "team": "1조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 32,
+    "name": "최서연",
+    "team": "1조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 33,
+    "name": "하연옥",
+    "team": "1조",
+    "isLeader": false,
+    "note": ""
+  },
+  {
+    "id": 34,
+    "name": "홍윤표",
+    "team": "1조",
+    "isLeader": false,
+    "note": ""
+  }
+]

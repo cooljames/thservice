@@ -1,0 +1,329 @@
+/* ============================================================
+   thservice: 격주 목요일 봉사 캘린더 전용 스타일
+   ============================================================ */
+
+.calendar-wrapper-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+/* 캘린더 상단 서브 헤더 (첨부 이미지 스타일 반영) */
+.calendar-top-tabs {
+  display: flex;
+  background: #F8FAFC;
+  border-bottom: 1px solid var(--border);
+}
+
+.cal-top-tab-item {
+  padding: 0.75rem 1.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.cal-top-tab-item.active {
+  background: #475569;
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+/* 캘린더 컨트롤 바 (연/월 이동, 오늘, 필터 옵션) */
+.calendar-control-bar {
+  padding: 1.1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  background: #FFFFFF;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.cal-nav-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.btn-cal-today {
+  background: #F1F5F9;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-cal-today:hover {
+  background: #E2E8F0;
+}
+
+.btn-cal-nav {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 700;
+  transition: var(--transition);
+}
+
+.btn-cal-nav:hover {
+  background: #F8FAFC;
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}
+
+.current-month-display {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  padding: 0 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.cal-option-checks {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.cal-check-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.cal-legend-tags {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.legend-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.dot-thursday { background: #3B82F6; box-shadow: 0 0 6px rgba(59, 130, 246, 0.6); }
+.dot-applied { background: #10B981; }
+
+/* 캘린더 그리드 */
+.calendar-grid-container {
+  width: 100%;
+}
+
+.calendar-weekdays-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #F8FAFC;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+
+.weekday-cell {
+  padding: 0.75rem 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.weekday-cell.sunday { color: #DC2626; }
+.weekday-cell.thursday { color: #2563EB; font-weight: 800; background: rgba(59, 130, 246, 0.04); }
+.weekday-cell.saturday { color: #2563EB; }
+
+.calendar-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid var(--border);
+}
+
+/* 개별 날짜 셀 */
+.cal-day-cell {
+  min-height: 110px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 0.5rem;
+  position: relative;
+  background: #FFFFFF;
+  transition: var(--transition);
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+}
+
+.cal-day-cell:nth-child(7n) {
+  border-right: none;
+}
+
+.cal-day-cell.other-month {
+  background: #FAFAFA;
+  opacity: 0.45;
+}
+
+.cal-day-cell.other-month .day-num {
+  color: #94A3B8;
+}
+
+/* 오늘 날짜 하이라이트 (첨부 이미지 노란색 배경) */
+.cal-day-cell.today {
+  background: #FEF9C3 !important;
+}
+
+.cal-day-cell.today .day-num {
+  font-weight: 800;
+  color: #854D0E;
+}
+
+/* 격주 목요일 봉사활동 일자 셀 */
+.cal-day-cell.volunteer-day {
+  background: #F0F7FF;
+  cursor: pointer;
+  position: relative;
+}
+
+.cal-day-cell.volunteer-day:hover {
+  background: #E0EFFF;
+  transform: scale(1.01);
+  z-index: 5;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.cal-day-cell.volunteer-day.has-applied {
+  background: #ECFDF5;
+}
+
+.cal-day-cell.volunteer-day.has-applied:hover {
+  background: #D1FAE5;
+}
+
+/* 목요일 일자 셀 (더블클릭 인터랙션 지원) */
+.cal-day-cell.thursday-cell {
+  cursor: pointer;
+}
+
+.cal-day-cell.thursday-cell:not(.volunteer-day):hover {
+  background: #F8FAFC;
+  outline: 1px dashed #93C5FD;
+}
+
+.day-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+.day-num {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.day-sunday .day-num { color: #DC2626; }
+.day-saturday .day-num { color: #2563EB; }
+.cal-day-cell.day-holiday .day-num { color: #DC2626 !important; }
+
+.lunar-text {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.memorial-text {
+  font-size: 0.72rem;
+  color: #2563EB;
+  margin-top: 0.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.memorial-red {
+  color: #DC2626;
+  font-weight: 600;
+}
+
+/* 봉사 뱃지 컴포넌트 */
+.volunteer-badge-pill {
+  margin-top: auto;
+  background: #3B82F6;
+  color: #fff;
+  padding: 0.3rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 5px rgba(59, 130, 246, 0.25);
+  animation: pulseLight 2s infinite ease-in-out;
+}
+
+@keyframes pulseLight {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.volunteer-badge-pill.applied {
+  background: linear-gradient(135deg, #10B981, #059669);
+  box-shadow: 0 2px 5px rgba(16, 185, 129, 0.25);
+}
+
+.volunteer-badge-pill.completed {
+  background: #64748B;
+  box-shadow: none;
+  animation: none;
+}
+
+.badge-applicants {
+  font-size: 0.7rem;
+  background: rgba(255, 255, 255, 0.25);
+  padding: 0.05rem 0.35rem;
+  border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+  .cal-day-cell {
+    min-height: 80px;
+    padding: 0.3rem;
+  }
+  .day-num {
+    font-size: 0.9rem;
+  }
+  .volunteer-badge-pill {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.35rem;
+  }
+}

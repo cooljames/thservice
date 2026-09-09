@@ -1,0 +1,30 @@
+{
+  "name": "thservice",
+  "version": "1.0.0",
+  "description": "2026 원무부 어울림센터 봉사활동 관리 시스템 (thservice)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "volunteer",
+    "calendar",
+    "dashboard",
+    "express",
+    "postgresql",
+    "kakao"
+  ],
+  "author": "Antigravity",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "googleapis": "^178.1.1",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.0"
+  }
+}

@@ -1,0 +1,6 @@
+node_modules/
+.env
+data/users.json
+data/attendance.json
+npm-debug.log*
+.DS_Store

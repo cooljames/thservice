@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2026 원무부 봉사활동 관리 시스템 (어울림센터)</title>
+  <meta name="description" content="2026년 원무부 어울림센터 격주 목요일 봉사활동 일정 및 참가 신청 대시보드">
+  
+  <!-- Fonts & Icons -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/calendar.css">
+</head>
+<body>
+
+  <!-- ============================================================
+       헤더
+       ============================================================ -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand" onclick="window.ThApp.switchTab('calendar')">
+        <div class="brand-icon">🤝</div>
+        <div class="brand-info">
+          <span class="brand-title">원무부 봉사활동</span>
+          <span class="brand-sub">부산 사하구 어울림센터 (051-208-4458)</span>
+        </div>
+      </div>
+
+      <nav class="nav-tabs">
+        <button class="nav-tab-btn active" data-tab="calendar" id="tab-btn-calendar">
+          <span>📅</span> 봉사 달력
+        </button>
+        <button class="nav-tab-btn" data-tab="dashboard" id="tab-btn-dashboard">
+          <span>📊</span> 봉사 대시보드
+        </button>
+        <button class="nav-tab-btn" data-tab="teams" id="tab-btn-teams">
+          <span>👥</span> 원무부 조편성
+        </button>
+        <!-- Root 최고 관리자 전용 탭 (항상 노출되어 클릭 시 권한 안내) -->
+        <button class="nav-tab-btn" data-tab="admin-users" id="tab-btn-admin-users">
+          <span>🛠️</span> 회원 관리
+        </button>
+      </nav>
+
+      <div class="header-user-section">
+        <!-- 비로그인 상태 -->
+        <div id="header-guest-section">
+          <button class="btn-login-trigger" id="btn-open-login">
+            <span>👤</span> 로그인 / 회원가입
+          </button>
+        </div>
+
+        <!-- 로그인 상태 -->
+        <div id="header-user-section" class="user-profile-badge" style="display: none;">
+          <div class="user-avatar" id="header-user-avatar">U</div>
+          <div class="user-meta">
+            <div class="user-name-role">
+              <span id="header-user-name">사용자</span>
+              <span class="badge-tag" id="header-user-role">회원</span>
+            </div>
+          </div>
+          <button class="btn-user-mgmt-shortcut" id="btn-header-user-mgmt" style="display: none; background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; padding: 0.3rem 0.65rem; font-size: 0.75rem; font-weight: 700; border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition);">
+            🛠️ 회원관리
+          </button>
+          <button class="btn-logout" id="btn-header-logout" title="로그아웃">로그아웃</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       메인 컨텐츠
+       ============================================================ -->
+  <main class="main-wrapper">
+
+    <!-- 상단 주요 공지 배너 -->
+    <div class="notice-banner">
+      <div class="banner-content">
+        <h2>📢 격주 목요일 어울림센터 정기 봉사활동</h2>
+        <p>17시 30분까지 근무자도 가능하면 업무 인계 후 참석 바랍니다. 달력의 <strong>목요일 일자를 더블 클릭</strong>하여 봉사 일정을 등록 · 수정 · 삭제할 수 있습니다.</p>
+      </div>
+      <div class="banner-meta-badge">
+        <div class="banner-meta-title">다음 봉사활동</div>
+        <div class="banner-meta-val" id="banner-next-event-badge">2026.09.10 (D-1)</div>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------------------
+         탭 1: 봉사 달력 (Calendar View)
+         ------------------------------------------------------------ -->
+    <section class="tab-pane active" id="pane-calendar">
+      <div class="calendar-wrapper-card">
+        
+        <!-- 상단 서브 탭 & Admin 일정 등록 버튼 -->
+        <div class="calendar-top-tabs" style="display: flex; justify-content: space-between; align-items: center; padding-right: 1.25rem;">
+          <div style="display: flex; flex-wrap: wrap;">
+            <div class="cal-top-tab-item active">달력 (봉사 일정 & 신청)</div>
+            <div class="cal-top-tab-item" onclick="window.ThApp.switchTab('dashboard')">봉사 통계 분석</div>
+            <div class="cal-top-tab-item" onclick="window.ThApp.switchTab('teams')">조편성 현황</div>
+            <div class="cal-top-tab-item" onclick="window.ThApp.switchTab('admin-users')">🛠️ 회원 관리 (Root)</div>
+          </div>
+          <!-- Admin/Root 봉사 일정 등록 버튼 (항상 노출되어 클릭 시 권한 안내) -->
+          <button class="btn-create-event-trigger" id="btn-open-event-create">
+            <span>➕</span> 봉사 일정 등록 (Admin)
+          </button>
+        </div>
+
+        <!-- 달력 컨트롤 바 -->
+        <div class="calendar-control-bar">
+          <div class="cal-nav-group">
+            <button class="btn-cal-today" id="btn-cal-today">오늘</button>
+            <button class="btn-cal-nav" id="btn-cal-prev" title="이전 달">〈</button>
+            <span class="current-month-display" id="cal-month-title">2026.09 ▼</span>
+            <button class="btn-cal-nav" id="btn-cal-next" title="다음 달">〉</button>
+          </div>
+
+          <div class="cal-legend-tags">
+            <div class="legend-tag">
+              <span class="legend-dot dot-thursday"></span>
+              <span>격주 목요일 (봉사일)</span>
+            </div>
+            <div class="legend-tag">
+              <span class="legend-dot dot-applied"></span>
+              <span>내 참가 신청 완료</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 달력 요일 및 날짜 그리드 -->
+        <div class="calendar-grid-container">
+          <div class="calendar-weekdays-row">
+            <div class="weekday-cell sunday">일</div>
+            <div class="weekday-cell">월</div>
+            <div class="weekday-cell">화</div>
+            <div class="weekday-cell">수</div>
+            <div class="weekday-cell thursday">목 (봉사의 날)</div>
+            <div class="weekday-cell">금</div>
+            <div class="weekday-cell saturday">토</div>
+          </div>
+          <div class="calendar-days-grid" id="calendar-days-grid">
+            <!-- 자바스크립트로 날짜 셀 생성 -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------
+         탭 2: 봉사 대시보드 (Analytics Dashboard)
+         ------------------------------------------------------------ -->
+    <section class="tab-pane" id="pane-dashboard">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon blue">📅</div>
+          <div class="kpi-info">
+            <span class="kpi-label">누적 봉사 활동 횟수</span>
+            <span class="kpi-value" id="kpi-total-events">16회</span>
+            <span class="kpi-sub">2026년 정기 봉사 누적</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon green">👥</div>
+          <div class="kpi-info">
+            <span class="kpi-label">총 참여 연인원</span>
+            <span class="kpi-value" id="kpi-total-parts">95명</span>
+            <span class="kpi-sub">원무부 전체 봉사 참여자</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon purple">⏳</div>
+          <div class="kpi-info">
+            <span class="kpi-label">다음 봉사활동 D-Day</span>
+            <span class="kpi-value" id="kpi-next-dday">D-1</span>
+            <span class="kpi-sub" id="kpi-next-date">2026-09-10 (전체)</span>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon amber">📈</div>
+          <div class="kpi-info">
+            <span class="kpi-label">회차별 평균 참석 인원</span>
+            <span class="kpi-value" id="kpi-avg-parts">5.9명</span>
+            <span class="kpi-sub">회차당 평균 동행 인원</span>
+          </div>
+        </div>
+
+        <div class="kpi-card" id="kpi-my-stats-card" style="display: none; border-color: #93C5FD; background: #EFF6FF;">
+          <div class="kpi-icon blue" style="background: #3B82F6; color: #fff;">🎖️</div>
+          <div class="kpi-info">
+            <span class="kpi-label">내 봉사 참가 이력</span>
+            <span class="kpi-value" id="kpi-my-count">0회</span>
+            <span class="kpi-sub" id="kpi-my-rate">출석률 0%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-sections-grid">
+        <div class="content-card">
+          <div class="card-header">
+            <h3 class="card-title">📊 전체 인원 참여 상황</h3>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">전체 회원의 누적 봉사 참여 횟수</span>
+          </div>
+          <div class="chart-container" style="position: relative; height:40vh; width:100%; display:flex; justify-content:center; align-items:center;">
+            <canvas id="participation-chart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------
+         탭 3: 원무부 조편성 (Teams Roster)
+         ------------------------------------------------------------ -->
+    <section class="tab-pane" id="pane-teams">
+      <div class="teams-grid">
+        <div class="team-roster-card team1-border">
+          <div class="team-card-header">
+            <div>
+              <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--team1);">🔹 1조 (A조)</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary);">조장: <strong>서옥영</strong> | 어울림센터 (051-208-4458)</p>
+            </div>
+            <span class="badge-tag badge-team1" style="font-size: 0.8rem; padding: 0.3rem 0.6rem;">17명 등록</span>
+          </div>
+          <div class="member-list-grid" id="team1-members-grid">
+            <!-- 렌더링 -->
+          </div>
+        </div>
+
+        <div class="team-roster-card team2-border">
+          <div class="team-card-header">
+            <div>
+              <h3 style="font-size: 1.2rem; font-weight: 800; color: var(--team2);">🔸 2조 (B조)</h3>
+              <p style="font-size: 0.85rem; color: var(--text-secondary);">조장: <strong>변승원</strong> | 어울림센터 (051-208-4458)</p>
+            </div>
+            <span class="badge-tag badge-team2" style="font-size: 0.8rem; padding: 0.3rem 0.6rem;">17명 등록</span>
+          </div>
+          <div class="member-list-grid" id="team2-members-grid">
+            <!-- 렌더링 -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------------------------------------------
+         탭 4: Root 전용 회원 관리 (Admin Users Panel)
+         ------------------------------------------------------------ -->
+    <section class="tab-pane" id="pane-admin-users">
+      <div class="content-card">
+        <div class="card-header">
+          <div>
+            <h3 class="card-title">🛠️ 원무부 사용자 권한 및 회원 관리</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.2rem;">
+              최고 관리자(Root) 권한으로 전체 사용자의 역할(root > admin > user)을 관리하고 회원을 설정합니다.
+            </p>
+          </div>
+        </div>
+
+        <!-- Root 권한 미보유 시 안내 배너 및 1초 로그인 버튼 -->
+        <div id="admin-root-guard-banner" style="display: none; padding: 2.5rem 1.5rem; text-align: center; background: #FEF2F2; border: 1px solid #FECACA; border-radius: var(--radius-md); margin-top: 1rem;">
+          <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔒</div>
+          <h4 style="font-size: 1.15rem; font-weight: 800; color: #991B1B; margin-bottom: 0.5rem;">최고 관리자 (Root) 전용 페이지입니다</h4>
+          <p style="font-size: 0.9rem; color: #7F1D1D; margin-bottom: 1.25rem; max-width: 500px; margin-left: auto; margin-right: auto;">
+            전체 원무부 회원 명단 조회, 권한 변경(root &gt; admin &gt; user), 사용자 삭제를 진행하시려면 Root 계정으로 로그인해주세요.
+          </p>
+          <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+            <button type="button" id="btn-admin-pane-quick-login" style="padding: 0.65rem 1.4rem; font-size: 0.9rem; font-weight: 700; background: #DC2626; color: #FFFFFF; border: none; border-radius: var(--radius-sm); cursor: pointer; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);">
+              👑 Root (최고관리자) 1초 로그인
+            </button>
+            <button type="button" id="btn-admin-pane-open-login" style="padding: 0.65rem 1.2rem; font-size: 0.9rem; font-weight: 600; background: #FFFFFF; color: #374151; border: 1px solid #D1D5DB; border-radius: var(--radius-sm); cursor: pointer;">
+              다른 계정으로 로그인
+            </button>
+          </div>
+        </div>
+
+        <!-- Root 권한 보유 시 표시되는 회원 관리 컨텐츠 -->
+        <div id="admin-root-content">
+          <!-- 회원 수 통계 카드 -->
+          <div class="admin-summary-grid">
+            <div class="admin-summary-card">
+              <div class="admin-summary-label">전체 가입 회원</div>
+              <div class="admin-summary-val" id="summary-total-users">-</div>
+            </div>
+            <div class="admin-summary-card" style="border-left: 4px solid #DC2626;">
+              <div class="admin-summary-label">최고 관리자 (Root)</div>
+              <div class="admin-summary-val" id="summary-root-users" style="color: #DC2626;">-</div>
+            </div>
+            <div class="admin-summary-card" style="border-left: 4px solid #6D28D9;">
+              <div class="admin-summary-label">원무 관리자 (Admin)</div>
+              <div class="admin-summary-val" id="summary-admin-users" style="color: #6D28D9;">-</div>
+            </div>
+            <div class="admin-summary-card" style="border-left: 4px solid #3B82F6;">
+              <div class="admin-summary-label">일반 회원 (User)</div>
+              <div class="admin-summary-val" id="summary-normal-users" style="color: #3B82F6;">-</div>
+            </div>
+          </div>
+
+          <div style="overflow-x: auto;">
+            <table class="leaderboard-table">
+              <thead>
+                <tr>
+                  <th>성명 (실명)</th>
+                  <th>이메일 계정</th>
+                  <th>소속 조</th>
+                  <th>현재 권한</th>
+                  <th>권한 변경 (root > admin > user)</th>
+                  <th>관리</th>
+                </tr>
+              </thead>
+              <tbody id="admin-users-tbody">
+                <!-- admin.js로 렌더링 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       참가 신청 슬라이드 드로어
+       ============================================================ -->
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+  <aside class="drawer-panel" id="drawer-panel">
+    <div class="drawer-header">
+      <div>
+        <span class="drawer-date-badge" id="drawer-event-date">📅 2026-09-10 (목요일)</span>
+        <h3 class="drawer-title" id="drawer-event-title">2026 어울림센터 봉사활동</h3>
+      </div>
+      <button class="btn-close-modal" id="btn-close-drawer">✕</button>
+    </div>
+
+    <div class="drawer-body">
+      <div class="event-detail-box">
+        <div class="detail-item">
+          <span class="detail-key">시간</span>
+          <span class="detail-val" id="drawer-event-time">17:30 ~ 19:00</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-key">장소</span>
+          <span class="detail-val" id="drawer-event-location">어울림센터 (051-208-4458)</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-key">안내사항</span>
+          <span class="detail-val" id="drawer-event-notice">17시 30분 업무인계 후 참석 바랍니다.</span>
+        </div>
+      </div>
+
+      <div class="attendees-section">
+        <div class="attendees-header">
+          <span>참석 신청자 명단</span>
+          <span class="attendees-count-pill" id="drawer-attendees-count">0명</span>
+        </div>
+        <div class="attendees-list" id="drawer-attendees-list">
+          <!-- 참석자 리스트 -->
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer-actions" style="display: flex; gap: 0.5rem; flex-direction: column;">
+      <button class="btn-apply-toggle apply" id="btn-apply-toggle">
+        ✋ 봉사 참가 신청하기
+      </button>
+      <div id="drawer-admin-actions" style="display: none; gap: 0.5rem; margin-top: 0.25rem;">
+        <!-- Admin / Root 전용 일정 수정 버튼 -->
+        <button type="button" id="btn-drawer-edit-event" class="btn-create-event-trigger" style="flex: 1; justify-content: center; font-size: 0.8rem; padding: 0.6rem;">
+          ✏️ 일정 수정 / 변경
+        </button>
+        <!-- Admin / Root 전용 일정 삭제 버튼 -->
+        <button type="button" class="btn-user-delete" id="btn-delete-event" style="flex: 1; padding: 0.6rem; font-size: 0.8rem;">
+          🗑️ 일정 삭제
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============================================================
+       봉사 일정 수정 / 변경 / 삭제 모달 (Admin / Root 전용)
+       ============================================================ -->
+  <div class="modal-overlay" id="modal-event-edit">
+    <div class="modal-card" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title">✏️ 봉사활동 일정 수정 / 변경 / 삭제</h3>
+        <button class="btn-close-modal" id="btn-close-event-edit">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-edit-event">
+          <input type="hidden" id="event-edit-id">
+          <div class="form-group">
+            <label class="form-label">봉사 일자 (목요일)</label>
+            <input type="date" class="form-input" id="event-edit-date" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">봉사활동 제목</label>
+            <input type="text" class="form-input" id="event-edit-title" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">봉사 장소</label>
+            <input type="text" class="form-input" id="event-edit-location" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">봉사 시간</label>
+            <input type="text" class="form-input" id="event-edit-time" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">공지 및 안내사항</label>
+            <textarea class="form-input" id="event-edit-notice" rows="2" style="resize: vertical;"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">진행 상태</label>
+            <select class="form-input" id="event-edit-status">
+              <option value="OPEN">신청 접수 중 (OPEN)</option>
+              <option value="CLOSED">신청 마감 (CLOSED)</option>
+              <option value="COMPLETED">봉사 완료 (COMPLETED)</option>
+            </select>
+          </div>
+
+          <!-- 구글 시트 연동 체크박스 -->
+          <div class="gsheet-sync-box">
+            <label class="gsheet-sync-label">
+              <input type="checkbox" id="event-edit-gsheet" checked>
+              <span>📊 Google 스프레드시트 탭 동기화 반영</span>
+            </label>
+            <div class="gsheet-sync-sub">
+              구글 시트에 해당 일자 명단 및 변경 사항을 동기화합니다.
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 0.5rem; margin-top: 1.25rem;">
+            <button type="submit" class="btn-submit" style="flex: 2; background: linear-gradient(135deg, #4F46E5, #3B82F6);">
+              💾 일정 변경 / 수정 저장
+            </button>
+            <button type="button" id="btn-edit-modal-delete" class="btn-user-delete" style="flex: 1; font-size: 0.85rem; padding: 0.75rem;">
+              🗑️ 일정 삭제
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       신규 봉사 일정 등록 모달 (Admin / Root 전용)
+       ============================================================ -->
+  <div class="modal-overlay" id="modal-event-create">
+    <div class="modal-card" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title">➕ 신규 봉사활동 일정 등록</h3>
+        <button class="btn-close-modal" id="btn-close-event-create">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-create-event">
+          <div class="form-group">
+            <label class="form-label">봉사 일자 (목요일)</label>
+            <input type="date" class="form-input" id="event-input-date" required value="2026-09-10">
+          </div>
+          <div class="form-group">
+            <label class="form-label">봉사활동 제목</label>
+            <input type="text" class="form-input" id="event-input-title" placeholder="예: 2026 어울림센터 제17차 봉사활동" required value="2026 어울림센터 정기 봉사활동">
+          </div>
+          <div class="form-group">
+            <label class="form-label">봉사 장소</label>
+            <input type="text" class="form-input" id="event-input-location" value="어울림센터 (051-208-4458)" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">봉사 시간</label>
+            <input type="text" class="form-input" id="event-input-time" value="17:30 ~ 19:00" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">공지 및 안내사항</label>
+            <textarea class="form-input" id="event-input-notice" rows="2" style="resize: vertical;">17시 30분까지 근무자도 가능하면 업무인계 후 참석 바랍니다.</textarea>
+          </div>
+
+          <!-- 구글 시트 연동 체크박스 -->
+          <div class="gsheet-sync-box">
+            <label class="gsheet-sync-label">
+              <input type="checkbox" id="event-input-gsheet" checked>
+              <span>📊 Google 스프레드시트에 새 일정 시트 탭 동시 생성</span>
+            </label>
+            <div class="gsheet-sync-sub">
+              구글 시트('2026 원무부 봉사(어울림센터)')에 해당 일자(MM/DD) 탭과 1조/2조 명단 템플릿을 자동으로 생성합니다.
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit" style="background: linear-gradient(135deg, #4F46E5, #3B82F6);">
+            일정 등록 및 구글 시트 반영
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       로그인 / 회원가입 모달 (실명 검증 강제)
+       ============================================================ -->
+  <div class="modal-overlay" id="auth-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="auth-modal-title">원무부 봉사 로그인</h3>
+        <button class="btn-close-modal" id="btn-close-auth-modal">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <button class="btn-kakao-login" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 3c-5.52 0-10 3.58-10 8 0 2.82 1.83 5.3 4.62 6.72-.2.74-.74 2.68-.85 3.1-.14.51.18.5.38.37.15-.1 2.45-1.66 3.44-2.33.78.11 1.58.17 2.41.17 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
+          </svg>
+          카카오톡으로 1초 로그인
+        </button>
+
+        <div style="text-align: center; margin: 1.2rem 0; color: var(--text-muted); font-size: 0.8rem; position: relative;">
+          <span style="background: #fff; padding: 0 10px; position: relative; z-index: 1;">또는 이메일로 로그인</span>
+          <hr style="position: absolute; top: 50%; left: 0; width: 100%; border: none; border-top: 1px solid var(--border); z-index: 0;">
+        </div>
+
+        <!-- 퀵 테스트 로그인 버튼 (클릭 한 번으로 즉시 전환) -->
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+          <button type="button" id="btn-quick-login-root" style="flex: 1; padding: 0.5rem; font-size: 0.8rem; font-weight: 700; background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; border-radius: var(--radius-sm); cursor: pointer;">
+            👑 Root (최고관리자)
+          </button>
+          <button type="button" id="btn-quick-login-user" style="flex: 1; padding: 0.5rem; font-size: 0.8rem; font-weight: 700; background: #DBEAFE; color: #1D4ED8; border: 1px solid #BFDBFE; border-radius: var(--radius-sm); cursor: pointer;">
+            👤 User (일반회원)
+          </button>
+        </div>
+
+        <!-- 로그인 폼 -->
+        <div id="modal-login-form">
+          <form id="form-email-login">
+            <div class="form-group">
+              <label class="form-label">이메일</label>
+              <input type="email" class="form-input" id="login-email" placeholder="admin@example.com 또는 volunteer@example.com" required value="admin@example.com">
+            </div>
+            <div class="form-group">
+              <label class="form-label">비밀번호</label>
+              <input type="password" class="form-input" id="login-password" placeholder="비밀번호를 입력하세요 (기본: 1234)" required value="1234">
+            </div>
+            <button type="submit" class="btn-submit">로그인</button>
+          </form>
+          <div class="auth-switch-link">
+            원무부 회원이신가요? <a id="link-to-register">실명으로 회원가입하기</a>
+          </div>
+        </div>
+
+        <!-- 회원가입 폼 (실명 강제) -->
+        <div id="modal-register-form" style="display: none;">
+          <form id="form-register">
+            <div class="form-group">
+              <label class="form-label">
+                성명 (원무부 등록 실명 필수)
+              </label>
+              <input type="text" class="form-input" id="reg-name" placeholder="예: 신용식, 서옥영, 변승원, 홍윤표 등" list="registered-members-datalist" autocomplete="off" required>
+              <datalist id="registered-members-datalist">
+                <!-- auth.js에서 원무부 32명 실명 자동 주입 -->
+              </datalist>
+              <div id="reg-team-auto-notice" style="display:none; margin-top:0.4rem; font-size:0.8rem; color:#15803D;">
+                ✅ 원무부 등록 회원 확인됨: <span id="reg-detected-team" class="badge-tag">1조</span>
+              </div>
+              <p style="font-size:0.75rem; color:#94A3B8; margin-top:0.25rem;">
+                ※ 원무부 스프레드시트에 등록된 32명 회원 실명으로만 가입이 가능합니다.
+              </p>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">이메일 계정</label>
+              <input type="email" class="form-input" id="reg-email" placeholder="example@hospital.com" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">비밀번호</label>
+              <input type="password" class="form-input" id="reg-password" placeholder="비밀번호 설정" required>
+            </div>
+            <button type="submit" class="btn-submit">실명 회원가입 완료</button>
+          </form>
+          <div class="auth-switch-link">
+            이미 계정이 있으신가요? <a id="link-to-login">로그인하기</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 토스트 컨테이너 -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- 푸터 -->
+  <footer class="app-footer">
+    <p>© 2026 원무부 봉사활동 관리 시스템 (thservice) | 부산 사하구 어울림센터 (051-208-4458)</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/calendar.js"></script>
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/admin.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
