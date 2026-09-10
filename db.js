@@ -441,6 +441,58 @@ async function updateMemberTeam(memberId, newTeam) {
   return null;
 }
 
+async function createMember(memberData) {
+  const cleanName = (memberData.name || '').trim();
+  const team = memberData.team || '1조';
+  const isLeader = !!memberData.isLeader;
+  const phone = memberData.phone || '';
+  const note = memberData.note || '';
+
+  if (pool) {
+    const res = await pool.query(`
+      INSERT INTO members (name, team, is_leader, phone, note)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *
+    `, [cleanName, team, isLeader, phone, note]);
+    const r = res.rows[0];
+    return {
+      id: r.id,
+      name: r.name,
+      team: r.team,
+      isLeader: r.is_leader,
+      phone: r.phone,
+      note: r.note
+    };
+  }
+
+  const members = readJson('members.json');
+  const maxId = members.reduce((max, m) => Math.max(max, Number(m.id) || 0), 0);
+  const newMember = {
+    id: maxId + 1,
+    name: cleanName,
+    team,
+    isLeader,
+    phone,
+    note
+  };
+  members.push(newMember);
+  writeJson('members.json', members);
+  return newMember;
+}
+
+async function deleteMember(memberId) {
+  if (pool) {
+    const res = await pool.query('DELETE FROM members WHERE id = $1 RETURNING *', [parseInt(memberId, 10)]);
+    return res.rows.length > 0;
+  }
+  const members = readJson('members.json');
+  const idx = members.findIndex(m => String(m.id) === String(memberId));
+  if (idx === -1) return false;
+  members.splice(idx, 1);
+  writeJson('members.json', members);
+  return true;
+}
+
 
 // --- [봉사 일정 (Events) CRUD] ---
 async function getAllEvents() {
@@ -799,6 +851,8 @@ module.exports = {
   isMemberNameAlreadyRegistered,
   getAllMembers,
   updateMemberTeam,
+  createMember,
+  deleteMember,
   // Events
   getAllEvents,
   getEventById,

@@ -248,28 +248,30 @@
          ------------------------------------------------------------ -->
     <section class="tab-pane" id="pane-admin-users">
       <div class="content-card">
-        <div class="card-header">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
           <div>
             <h3 class="card-title">🛠️ 원무부 사용자 권한 및 회원 관리</h3>
             <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.2rem;">
-              최고 관리자(Root) 권한으로 전체 사용자의 역할(root > admin > user)을 관리하고 회원을 설정합니다.
+              최고 관리자(Root) 권한으로 원무부 봉사자 회원을 DB에 직접 등록하고 계정 역할을 관리합니다.
             </p>
+          </div>
+          <div>
+            <button type="button" class="btn-primary" id="btn-open-member-create" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.1rem; font-size: 0.88rem; font-weight: 700; border-radius: var(--radius-sm); cursor: pointer;">
+              <span>➕</span> 신규 봉사자 회원 등록
+            </button>
           </div>
         </div>
 
-        <!-- Root 권한 미보유 시 안내 배너 및 1초 로그인 버튼 -->
+        <!-- Root 권한 미보유 시 안내 배너 -->
         <div id="admin-root-guard-banner" style="display: none; padding: 2.5rem 1.5rem; text-align: center; background: #FEF2F2; border: 1px solid #FECACA; border-radius: var(--radius-md); margin-top: 1rem;">
           <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔒</div>
           <h4 style="font-size: 1.15rem; font-weight: 800; color: #991B1B; margin-bottom: 0.5rem;">최고 관리자 (Root) 전용 페이지입니다</h4>
           <p style="font-size: 0.9rem; color: #7F1D1D; margin-bottom: 1.25rem; max-width: 500px; margin-left: auto; margin-right: auto;">
-            전체 원무부 회원 명단 조회, 권한 변경(root &gt; admin &gt; user), 사용자 삭제를 진행하시려면 Root 계정으로 로그인해주세요.
+            전체 원무부 회원 명단 조회, 신규 회원 DB 등록, 권한 변경(root &gt; admin &gt; user)을 진행하시려면 Root 계정으로 로그인해주세요.
           </p>
           <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
-            <button type="button" id="btn-admin-pane-quick-login" style="padding: 0.65rem 1.4rem; font-size: 0.9rem; font-weight: 700; background: #DC2626; color: #FFFFFF; border: none; border-radius: var(--radius-sm); cursor: pointer; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);">
-              👑 Root (최고관리자) 1초 로그인
-            </button>
-            <button type="button" id="btn-admin-pane-open-login" style="padding: 0.65rem 1.2rem; font-size: 0.9rem; font-weight: 600; background: #FFFFFF; color: #374151; border: 1px solid #D1D5DB; border-radius: var(--radius-sm); cursor: pointer;">
-              다른 계정으로 로그인
+            <button type="button" id="btn-admin-pane-open-login" style="padding: 0.65rem 1.4rem; font-size: 0.9rem; font-weight: 700; background: #DC2626; color: #FFFFFF; border: none; border-radius: var(--radius-sm); cursor: pointer; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);">
+              🔑 관리자 로그인
             </button>
           </div>
         </div>
@@ -279,7 +281,11 @@
           <!-- 회원 수 통계 카드 -->
           <div class="admin-summary-grid">
             <div class="admin-summary-card">
-              <div class="admin-summary-label">전체 가입 회원</div>
+              <div class="admin-summary-label">원무부 등록 봉사자</div>
+              <div class="admin-summary-val" id="summary-total-members" style="color: #2563EB;">-</div>
+            </div>
+            <div class="admin-summary-card">
+              <div class="admin-summary-label">전체 가입 계정</div>
               <div class="admin-summary-val" id="summary-total-users">-</div>
             </div>
             <div class="admin-summary-card" style="border-left: 4px solid #DC2626;">
@@ -290,13 +296,20 @@
               <div class="admin-summary-label">원무 관리자 (Admin)</div>
               <div class="admin-summary-val" id="summary-admin-users" style="color: #6D28D9;">-</div>
             </div>
-            <div class="admin-summary-card" style="border-left: 4px solid #3B82F6;">
-              <div class="admin-summary-label">일반 회원 (User)</div>
-              <div class="admin-summary-val" id="summary-normal-users" style="color: #3B82F6;">-</div>
-            </div>
           </div>
 
-          <div style="overflow-x: auto;">
+          <!-- 서브 탭 전환 버튼 -->
+          <div style="display: flex; gap: 0.5rem; margin: 1.5rem 0 1rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">
+            <button type="button" class="btn-subtab active" id="btn-subtab-users" style="padding: 0.5rem 1rem; font-size: 0.9rem; font-weight: 700; border: none; background: none; cursor: pointer; color: var(--primary); border-bottom: 2px solid var(--primary); margin-bottom: -0.6rem;">
+              👤 가입 계정 목록 (<span id="count-subtab-users">0</span>)
+            </button>
+            <button type="button" class="btn-subtab" id="btn-subtab-members" style="padding: 0.5rem 1rem; font-size: 0.9rem; font-weight: 600; border: none; background: none; cursor: pointer; color: var(--text-secondary);">
+              📋 원무부 봉사자 명단 DB (<span id="count-subtab-members">0</span>)
+            </button>
+          </div>
+
+          <!-- 1. 가입 계정 테이블 -->
+          <div id="subtab-panel-users" style="overflow-x: auto;">
             <table class="leaderboard-table">
               <thead>
                 <tr>
@@ -305,10 +318,30 @@
                   <th>소속 조</th>
                   <th>현재 권한</th>
                   <th>권한 변경 (root > admin > user)</th>
-                  <th>관리</th>
+                  <th>계정 삭제</th>
                 </tr>
               </thead>
               <tbody id="admin-users-tbody">
+                <!-- admin.js로 렌더링 -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 2. 원무부 봉사자 명단 테이블 -->
+          <div id="subtab-panel-members" style="display: none; overflow-x: auto;">
+            <table class="leaderboard-table">
+              <thead>
+                <tr>
+                  <th>번호</th>
+                  <th>봉사자 성명</th>
+                  <th>소속 조</th>
+                  <th>직책</th>
+                  <th>연락처</th>
+                  <th>비고</th>
+                  <th>명단 삭제</th>
+                </tr>
+              </thead>
+              <tbody id="admin-members-tbody">
                 <!-- admin.js로 렌더링 -->
               </tbody>
             </table>
@@ -493,7 +526,88 @@
   </div>
 
   <!-- ============================================================
-       로그인 / 회원가입 모달 (실명 검증 강제)
+       신규 봉사자 회원 등록 모달 (Admin / Root 전용 DB 등록)
+       ============================================================ -->
+  <div class="modal-overlay" id="modal-member-create">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">➕ 신규 원무부 봉사자 회원 등록 (DB)</h3>
+        <button class="btn-close-modal" id="btn-close-member-create">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-member-create">
+          <div class="form-group">
+            <label class="form-label">봉사자 성명 (실명) *</label>
+            <input type="text" class="form-input" id="member-input-name" placeholder="실명을 입력하세요 (예: 홍길동)" required autocomplete="off">
+          </div>
+
+          <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+              <label class="form-label">소속 조 *</label>
+              <select class="form-input" id="member-input-team" required>
+                <option value="1조">1조 (A조 - 조장 서옥영)</option>
+                <option value="2조">2조 (B조 - 조장 변승원)</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+              <label class="form-label">직책 (조장 여부)</label>
+              <div style="display: flex; align-items: center; height: 42px;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer;">
+                  <input type="checkbox" id="member-input-leader" style="width: 18px; height: 18px;">
+                  <span>조장으로 지정</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">연락처 (전화번호)</label>
+            <input type="text" class="form-input" id="member-input-phone" placeholder="010-XXXX-XXXX">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">비고 / 메모</label>
+            <input type="text" class="form-input" id="member-input-note" placeholder="특이사항 입력 (예: 신규 전입 등)">
+          </div>
+
+          <!-- 웹 로그인 계정도 함께 생성 옵션 -->
+          <div style="background: #F8FAFC; padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 1.2rem;">
+            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; font-weight: 700; cursor: pointer; color: var(--text-primary); margin-bottom: 0.5rem;">
+              <input type="checkbox" id="member-input-create-user" style="width: 18px; height: 18px;">
+              <span>🔑 웹 로그인 계정도 동시에 DB에 생성하기</span>
+            </label>
+            <div id="member-create-user-fields" style="display: none; margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px dashed var(--border);">
+              <div class="form-group" style="margin-bottom: 0.6rem;">
+                <label class="form-label">로그인 이메일</label>
+                <input type="email" class="form-input" id="member-input-email" placeholder="user@hospital.com">
+              </div>
+              <div style="display: flex; gap: 0.8rem;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                  <label class="form-label">초기 비밀번호</label>
+                  <input type="password" class="form-input" id="member-input-password" placeholder="기본: 1234">
+                </div>
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                  <label class="form-label">시스템 권한</label>
+                  <select class="form-input" id="member-input-role">
+                    <option value="user">일반회원 (User)</option>
+                    <option value="admin">원무관리자 (Admin)</option>
+                    <option value="root">최고관리자 (Root)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit" style="background: linear-gradient(135deg, #2563EB, #1D4ED8);">
+            ✅ 원무부 봉사자 DB 등록 완료
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       로그인 / 회원가입 모달
        ============================================================ -->
   <div class="modal-overlay" id="auth-modal">
     <div class="modal-card">
@@ -515,26 +629,16 @@
           <hr style="position: absolute; top: 50%; left: 0; width: 100%; border: none; border-top: 1px solid var(--border); z-index: 0;">
         </div>
 
-        <!-- 퀵 테스트 로그인 버튼 (클릭 한 번으로 즉시 전환) -->
-        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-          <button type="button" id="btn-quick-login-root" style="flex: 1; padding: 0.5rem; font-size: 0.8rem; font-weight: 700; background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; border-radius: var(--radius-sm); cursor: pointer;">
-            👑 Root (최고관리자)
-          </button>
-          <button type="button" id="btn-quick-login-user" style="flex: 1; padding: 0.5rem; font-size: 0.8rem; font-weight: 700; background: #DBEAFE; color: #1D4ED8; border: 1px solid #BFDBFE; border-radius: var(--radius-sm); cursor: pointer;">
-            👤 User (일반회원)
-          </button>
-        </div>
-
         <!-- 로그인 폼 -->
         <div id="modal-login-form">
           <form id="form-email-login">
             <div class="form-group">
               <label class="form-label">이메일</label>
-              <input type="email" class="form-input" id="login-email" placeholder="root@example.com 또는 admin@example.com" required value="root@example.com">
+              <input type="email" class="form-input" id="login-email" placeholder="이메일을 입력하세요" required autocomplete="email">
             </div>
             <div class="form-group">
               <label class="form-label">비밀번호</label>
-              <input type="password" class="form-input" id="login-password" placeholder="비밀번호를 입력하세요 (기본: 1234)" required value="1234">
+              <input type="password" class="form-input" id="login-password" placeholder="비밀번호를 입력하세요" required autocomplete="current-password">
             </div>
             <button type="submit" class="btn-submit">로그인</button>
           </form>
@@ -543,34 +647,42 @@
           </div>
         </div>
 
-        <!-- 회원가입 폼 (실명 강제) -->
+        <!-- 회원가입 폼 (신규 봉사자도 DB 등록 가능) -->
         <div id="modal-register-form" style="display: none;">
           <form id="form-register">
             <div class="form-group">
               <label class="form-label">
-                성명 (원무부 등록 실명 필수)
+                성명 (실명 입력)
               </label>
               <input type="text" class="form-input" id="reg-name" placeholder="예: 신용식, 서옥영, 변승원, 홍윤표 등" list="registered-members-datalist" autocomplete="off" required>
               <datalist id="registered-members-datalist">
-                <!-- auth.js에서 원무부 32명 실명 자동 주입 -->
+                <!-- auth.js에서 원무부 등록 실명 자동 주입 -->
               </datalist>
               <div id="reg-team-auto-notice" style="display:none; margin-top:0.4rem; font-size:0.8rem; color:#15803D;">
-                ✅ 원무부 등록 회원 확인됨: <span id="reg-detected-team" class="badge-tag">1조</span>
+                ✅ 원무부 등록 명단 확인됨: <span id="reg-detected-team" class="badge-tag">1조</span>
               </div>
-              <p style="font-size:0.75rem; color:#94A3B8; margin-top:0.25rem;">
-                ※ 원무부 스프레드시트에 등록된 32명 회원 실명으로만 가입이 가능합니다.
+            </div>
+
+            <div class="form-group" id="reg-team-group">
+              <label class="form-label">소속 조 선택</label>
+              <select class="form-input" id="reg-team-select">
+                <option value="1조">1조 (A조 - 조장 서옥영)</option>
+                <option value="2조">2조 (B조 - 조장 변승원)</option>
+              </select>
+              <p style="font-size:0.75rem; color:#64748B; margin-top:0.25rem;">
+                ※ 명단에 이미 등록된 경우 소속 조가 자동 매칭되며, 신규 봉사자도 가입 시 DB에 자동 등록됩니다.
               </p>
             </div>
 
             <div class="form-group">
               <label class="form-label">이메일 계정</label>
-              <input type="email" class="form-input" id="reg-email" placeholder="example@hospital.com" required>
+              <input type="email" class="form-input" id="reg-email" placeholder="example@hospital.com" required autocomplete="email">
             </div>
             <div class="form-group">
               <label class="form-label">비밀번호</label>
-              <input type="password" class="form-input" id="reg-password" placeholder="비밀번호 설정" required>
+              <input type="password" class="form-input" id="reg-password" placeholder="비밀번호 설정" required autocomplete="new-password">
             </div>
-            <button type="submit" class="btn-submit">실명 회원가입 완료</button>
+            <button type="submit" class="btn-submit">원무부 회원가입 및 DB 등록</button>
           </form>
           <div class="auth-switch-link">
             이미 계정이 있으신가요? <a id="link-to-login">로그인하기</a>

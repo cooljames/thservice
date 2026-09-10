@@ -167,21 +167,24 @@ app.get('/api/me', (req, res) => {
   });
 });
 
-// 회원가입 (실명 검증 강제)
+// 회원가입 (신규 봉사자도 DB 등록 가능)
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, team } = req.body;
     if (!email || !password || !name) {
       return res.status(400).json({ error: '이메일, 비밀번호, 성명은 필수입니다.' });
     }
 
     const cleanName = name.trim();
 
-    // 1. 실명 검증: 원무부 등록 명단(members)에 실명이 존재하는지 확인
-    const member = await db.findMemberByName(cleanName);
+    // 1. 실명 명단(members) 확인, 없으면 신규 봉사자로 DB에 자동 등록!
+    let member = await db.findMemberByName(cleanName);
     if (!member) {
-      return res.status(400).json({
-        error: `"${cleanName}"님은 원무부 등록 봉사자 명단에 등록되어 있지 않습니다. 실명을 정확히 입력해주세요.`
+      const assignedTeam = team === '2조' || team === 'B조' ? '2조' : '1조';
+      member = await db.createMember({
+        name: cleanName,
+        team: assignedTeam,
+        isLeader: false
       });
     }
 
@@ -206,7 +209,7 @@ app.post('/api/auth/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await db.createUser({
-      email: email.toLowerCase().trim(),
+      email: cleanEmail,
       name: cleanName,
       password: hashedPassword,
       role,
@@ -704,6 +707,75 @@ app.put('/api/members/:id/team', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('Update member team error:', err);
     res.status(500).json({ error: '회원 조 변경 중 오류가 발생했습니다.' });
+  }
+});
+
+// 신규 봉사자 회원 등록 (Admin / Root 전용: members DB 및 옵션 users DB 등록)
+app.post('/api/members', requireAdmin, async (req, res) => {
+  try {
+    const { name, team, isLeader, phone, note, email, password, role } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: '회원 성명(실명)은 필수입니다.' });
+    }
+
+    const cleanName = name.trim();
+    const existing = await db.findMemberByName(cleanName);
+    if (existing) {
+      return res.status(400).json({ error: `"${cleanName}"님은 이미 원무부 봉사자로 등록되어 있습니다.` });
+    }
+
+    const assignedTeam = team === '2조' || team === 'B조' ? '2조' : '1조';
+    const newMember = await db.createMember({
+      name: cleanName,
+      team: assignedTeam,
+      isLeader: !!isLeader,
+      phone: phone || '',
+      note: note || ''
+    });
+
+    // 선택사항: 계정도 함께 생성 요청된 경우 users 테이블에도 동시 등록
+    let createdUser = null;
+    if (email && password) {
+      const cleanEmail = email.trim().toLowerCase();
+      const existingUser = await db.findUserByEmail(cleanEmail);
+      if (!existingUser) {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        createdUser = await db.createUser({
+          email: cleanEmail,
+          name: cleanName,
+          password: hashedPassword,
+          role: role || (isLeader ? 'admin' : 'user'),
+          provider: 'email',
+          memberName: cleanName,
+          team: assignedTeam
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `"${cleanName}"님이 ${assignedTeam} 봉사자로 DB에 정상 등록되었습니다.`,
+      member: newMember,
+      user: createdUser ? normalizeUser(createdUser) : null
+    });
+  } catch (err) {
+    console.error('Create member error:', err);
+    res.status(500).json({ error: '회원 등록 실패: ' + err.message });
+  }
+});
+
+// 봉사자 회원 삭제 (Root 전용)
+app.delete('/api/members/:id', requireRoot, async (req, res) => {
+  try {
+    const memberId = req.params.id;
+    const deleted = await db.deleteMember(memberId);
+    if (!deleted) {
+      return res.status(404).json({ error: '삭제할 회원을 찾을 수 없습니다.' });
+    }
+    res.json({ success: true, message: '원무부 봉사자가 명단에서 삭제되었습니다.' });
+  } catch (err) {
+    console.error('Delete member error:', err);
+    res.status(500).json({ error: '회원 삭제 실패: ' + err.message });
   }
 });
 

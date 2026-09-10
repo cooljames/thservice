@@ -79,12 +79,16 @@ window.ThAuth = (function () {
     const matched = cachedMembers.find(m => m.name === nameValue.trim());
     const teamNotice = document.getElementById('reg-team-auto-notice');
     const teamBadge = document.getElementById('reg-detected-team');
+    const teamSelect = document.getElementById('reg-team-select');
 
     if (matched) {
       if (teamNotice) teamNotice.style.display = 'block';
       if (teamBadge) {
         teamBadge.innerText = `${matched.team} ${matched.isLeader ? '(조장)' : ''}`;
         teamBadge.className = `badge-tag ${matched.team === '1조' ? 'badge-team1' : 'badge-team2'}`;
+      }
+      if (teamSelect && matched.team) {
+        teamSelect.value = matched.team;
       }
     } else {
       if (teamNotice) teamNotice.style.display = 'none';

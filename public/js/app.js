@@ -148,42 +148,6 @@ window.ThApp = (function () {
       });
     }
 
-    // 퀵 테스트 로그인 버튼 (클릭 시 자동 입력 및 로그인)
-    const quickRootBtn = document.getElementById('btn-quick-login-root');
-    const quickUserBtn = document.getElementById('btn-quick-login-user');
-    if (quickRootBtn) {
-      quickRootBtn.addEventListener('click', async () => {
-        document.getElementById('login-email').value = 'root@example.com';
-        document.getElementById('login-password').value = '1234';
-        try {
-          const res = await window.ThAuth.login('root@example.com', '1234');
-          showToast(`최고 관리자 (Root) 계정으로 로그인되었습니다.`, 'success');
-          window.ThAuth.closeAuthModal();
-          if (window.ThCalendar) window.ThCalendar.refresh();
-          if (window.ThDashboard) window.ThDashboard.loadStats();
-          switchTab('admin-users');
-        } catch (e) {
-          showToast(e.message, 'error');
-        }
-      });
-    }
-    if (quickUserBtn) {
-      quickUserBtn.addEventListener('click', async () => {
-        document.getElementById('login-email').value = 'volunteer@example.com';
-        document.getElementById('login-password').value = '1234';
-        try {
-          const res = await window.ThAuth.login('volunteer@example.com', '1234');
-          showToast(`일반 봉사자 회원으로 로그인되었습니다.`, 'success');
-          window.ThAuth.closeAuthModal();
-          if (window.ThCalendar) window.ThCalendar.refresh();
-          if (window.ThDashboard) window.ThDashboard.loadStats();
-          switchTab('calendar');
-        } catch (e) {
-          showToast(e.message, 'error');
-        }
-      });
-    }
-
     // 카카오 로그인 버튼
     document.querySelectorAll('.btn-kakao-login').forEach(btn => {
       btn.addEventListener('click', () => window.ThAuth.openKakaoLogin());
@@ -202,7 +166,7 @@ window.ThApp = (function () {
           window.ThAuth.closeAuthModal();
           if (window.ThCalendar) window.ThCalendar.refresh();
           if (window.ThDashboard) window.ThDashboard.loadStats();
-          if (res.user && res.user.role === 'root' && window.ThAdmin) {
+          if (res.user && (res.user.role === 'root' || res.user.role === 'admin') && window.ThAdmin) {
             window.ThAdmin.loadUsers();
           }
         } catch (err) {
@@ -216,15 +180,22 @@ window.ThApp = (function () {
     if (registerForm) {
       registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const name = document.getElementById('reg-name').value;
-        const email = document.getElementById('reg-email').value;
+        const name = document.getElementById('reg-name').value.trim();
+        const email = document.getElementById('reg-email').value.trim();
         const password = document.getElementById('reg-password').value;
+        const teamSelect = document.getElementById('reg-team-select');
+        const team = teamSelect ? teamSelect.value : '1조';
+
         try {
-          const res = await window.ThAuth.register({ name, email, password });
+          const res = await window.ThAuth.register({ name, email, password, team });
           showToast(res.message, 'success');
           window.ThAuth.closeAuthModal();
+          if (window.ThAuth.loadRegisteredMembers) window.ThAuth.loadRegisteredMembers();
           if (window.ThCalendar) window.ThCalendar.refresh();
           if (window.ThDashboard) window.ThDashboard.loadStats();
+          if (window.ThAdmin) {
+            window.ThAdmin.loadUsers();
+          }
         } catch (err) {
           showToast(err.message, 'error');
         }
