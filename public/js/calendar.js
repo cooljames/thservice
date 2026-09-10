@@ -324,9 +324,6 @@ window.ThCalendar = (function () {
             })
           });
 
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error);
-
           let toastMsg = data.message;
           if (data.googleSheet && data.googleSheet.message) {
             toastMsg += ` (${data.googleSheet.message})`;
