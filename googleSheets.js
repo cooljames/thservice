@@ -107,14 +107,23 @@ async function createSheetForEvent(event) {
         });
       }
 
-      // 복사할 대상 시트 찾기 (마지막 시트, 삭제된 기존 동명 탭 제외)
-      const sheetsList = spreadsheet.data.sheets.filter(s => s.properties.title !== tabName);
-      if (sheetsList.length === 0) {
-         throw new Error("복사할 이전 시트가 존재하지 않습니다.");
-      }
-      const sourceSheet = sheetsList[sheetsList.length - 1];
+      // 복사할 대상 시트 찾기:
+      // 삭제 대상(동명 탭)을 제외하고 탭 순서(인덱스)대로 정렬
+      const sheetsList = spreadsheet.data.sheets
+        .filter(s => s.properties.title !== tabName)
+        .sort((a, b) => (a.properties.index || 0) - (b.properties.index || 0));
 
-      // 신규 탭 추가 (이전 탭 복사)
+      if (sheetsList.length === 0) {
+        throw new Error("복사할 이전 시트가 존재하지 않습니다.");
+      }
+
+      // 날짜 형태(MM/DD 등)를 가진 시트 중 가장 최근(마지막) 시트 우선 선택
+      const dateSheets = sheetsList.filter(s => /^\d{1,2}\/\d{1,2}$/.test(s.properties.title));
+      const sourceSheet = dateSheets.length > 0 ? dateSheets[dateSheets.length - 1] : sheetsList[sheetsList.length - 1];
+
+      console.log(`[Google Sheets] 원본 탭 "${sourceSheet.properties.title}" 복제 -> 새 탭 "${tabName}" 생성`);
+
+      // 신규 탭 추가 (이전 탭의 체크박스, 서식, 내용 전체를 그대로 복제)
       await sheets.spreadsheets.batchUpdate({
         spreadsheetId,
         requestBody: {
@@ -130,11 +139,14 @@ async function createSheetForEvent(event) {
         }
       });
       
-      // 복사된 시트의 C열(참석 여부)을 모두 지워 체크박스를 빈 상태(FALSE)로 초기화
-      await sheets.spreadsheets.values.clear({
-        spreadsheetId,
-        range: `'${tabName}'!C2:C50`
-      });
+      console.log(`[Google Sheets] "${sourceSheet.properties.title}" 탭의 체크박스 및 서식/내용이 "${tabName}"에 그대로 복사되었습니다.`);
+
+      return {
+        success: true,
+        method: 'SERVICE_ACCOUNT',
+        tabName,
+        message: `구글 시트에 "${tabName}" 탭이 성공적으로 생성되었습니다!`
+      };
 
     } catch (err) {
       console.error('[Google Sheets] Service Account 호출 에러:', err.message);
